@@ -8,7 +8,7 @@ export class Game extends Scene {
     this.opponentPaddle;
     this.socket;
     this.ball;
-    this.paddleSpeed = 10;
+    this.paddleSpeed = 50;
     this.playerId;
     this.opponentId;
     this.topBoundaryCollider;
@@ -21,6 +21,7 @@ export class Game extends Scene {
     this.createBall();
     this.createBoundaries();
     this.createBallBoundaryColliders();
+    this.createBallPaddleCollider();
   }
 
   createWebSocketCommunication() {
@@ -56,7 +57,8 @@ export class Game extends Scene {
     this.playerPaddle = this.physics.add
       .image(20, this.scale.canvas.height / 2, "paddle")
       .setTintFill(0xff0000)
-      .setScale(0.0625, 0.25);
+      .setScale(0.0625, 0.25)
+      .setImmovable(true);
 
     this.opponentPaddle = this.physics.add
       .image(
@@ -65,7 +67,8 @@ export class Game extends Scene {
         "paddle"
       )
       .setTintFill(0xff0000)
-      .setScale(0.0625, 0.25);
+      .setScale(0.0625, 0.25)
+      .setImmovable(true);
 
     this.createPaddleListener();
   }
@@ -115,5 +118,30 @@ export class Game extends Scene {
 
     this.topBoundary.body.immovable = true;
     this.bottomBoundary.body.immovable = true;
+  }
+
+  createBallBoundaryColliders() {
+    this.physics.add.collider(this.ball, this.topBoundary, () => {
+      const newVelocityX = this.ball.body.velocity.x * 1.05;
+      const newVelocityY =
+        this.ball.body.velocity.y + Phaser.Math.Between(-50, 50);
+      this.ball.setVelocity(newVelocityX, newVelocityY);
+    });
+
+    this.physics.add.collider(this.ball, this.bottomBoundary, () => {
+      const newVelocityX =
+        this.ball.body.velocity.x + Phaser.Math.Between(-50, 50);
+      const newVelocityY = this.ball.body.velocity.y * 1.05;
+      this.ball.setVelocity(newVelocityX, newVelocityY);
+    });
+  }
+
+  createBallPaddleCollider() {
+    this.physics.add.collider(this.ball, this.playerPaddle, () => {
+      const newVelocityX = this.ball.body.velocity.x * 1.05;
+      const newVelocityY =
+        this.ball.body.velocity.y + Phaser.Math.Between(-50, 50);
+      this.ball.setVelocity(newVelocityX, newVelocityY);
+    });
   }
 }
