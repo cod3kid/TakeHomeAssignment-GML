@@ -44,11 +44,28 @@ export class Game extends Scene {
           const randomY =
             Phaser.Math.Between(100, 200) * (Math.random() < 0.5 ? 1 : -1);
           this.ball.setVelocity(randomX, randomY);
+          this.socket.send(
+            JSON.stringify({
+              ballVelocity: {
+                x: randomX,
+                y: randomY,
+              },
+            })
+          );
         }
       } else if (type === "waiting") {
         console.log(message);
       } else if (type === "movement") {
-        this.opponentPaddle.setY(message.playerPosY);
+        if (message.playerPosY) {
+          this.opponentPaddle.setY(message.playerPosY);
+        }
+
+        if (message.ballVelocity) {
+          this.ball.setVelocity(
+            -message.ballVelocity.x,
+            message.ballVelocity.y
+          );
+        }
       }
     };
   }
@@ -125,23 +142,52 @@ export class Game extends Scene {
       const newVelocityX = this.ball.body.velocity.x * 1.05;
       const newVelocityY =
         this.ball.body.velocity.y + Phaser.Math.Between(-50, 50);
+
       this.ball.setVelocity(newVelocityX, newVelocityY);
+      this.socket.send(
+        JSON.stringify({
+          ballVelocity: {
+            x: newVelocityX,
+            y: newVelocityY,
+          },
+        })
+      );
     });
 
     this.physics.add.collider(this.ball, this.bottomBoundary, () => {
-      const newVelocityX =
-        this.ball.body.velocity.x + Phaser.Math.Between(-50, 50);
-      const newVelocityY = this.ball.body.velocity.y * 1.05;
+      const newVelocityX = this.ball.body.velocity.x * 1.05;
+      const newVelocityY =
+        this.ball.body.velocity.y + Phaser.Math.Between(-50, 50);
+
       this.ball.setVelocity(newVelocityX, newVelocityY);
+
+      this.socket.send(
+        JSON.stringify({
+          ballVelocity: {
+            x: newVelocityX,
+            y: newVelocityY,
+          },
+        })
+      );
     });
   }
 
   createBallPaddleCollider() {
     this.physics.add.collider(this.ball, this.playerPaddle, () => {
-      const newVelocityX = this.ball.body.velocity.x * 1.05;
-      const newVelocityY =
-        this.ball.body.velocity.y + Phaser.Math.Between(-50, 50);
+      const newVelocityX =
+        this.ball.body.velocity.x + Phaser.Math.Between(-50, 50);
+      const newVelocityY = this.ball.body.velocity.y * 1.05;
+
       this.ball.setVelocity(newVelocityX, newVelocityY);
+
+      this.socket.send(
+        JSON.stringify({
+          ballVelocity: {
+            x: newVelocityX,
+            y: newVelocityY,
+          },
+        })
+      );
     });
   }
 }
