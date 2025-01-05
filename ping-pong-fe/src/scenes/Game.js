@@ -9,6 +9,8 @@ export class Game extends Scene {
     this.socket;
     this.ball;
     this.paddleSpeed = 10;
+    this.playerId;
+    this.opponentId;
   }
 
   create() {
@@ -21,17 +23,21 @@ export class Game extends Scene {
     this.socket = new WebSocket("ws://localhost:8000/ws");
 
     this.socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log(data);
+      const { type, message } = JSON.parse(event.data);
 
-      // Update opponent paddle position
-      if (data.opponentY !== undefined) {
-        this.opponentPaddle.y = data.opponentY;
-      }
+      if (type === "init") {
+        this.playerId = message.player_id;
+        console.log("Assigned Player ID:", this.playerId);
 
-      // Update ball position
-      if (data.ballX !== undefined && data.ballY !== undefined) {
-        ball.setPosition(data.ballX, data.ballY);
+        if (this.playerId === "player1") {
+          console.log("You are Player A. Waiting for Player B...");
+        } else if (this.playerId === "player2") {
+          console.log("You are Player B. Game starts now!");
+        }
+      } else if (type === "waiting") {
+        console.log(message);
+      } else if (type === "movement") {
+        this.opponentPaddle.setY(message.playerPosY);
       }
     };
   }
@@ -58,10 +64,10 @@ export class Game extends Scene {
     this.input.keyboard.on("keydown", (event) => {
       if (event.key === "ArrowUp") {
         this.playerPaddle.setY(this.playerPaddle.y - this.paddleSpeed);
-        this.socket.send(JSON.stringify({ playerA: this.playerPaddle.y }));
+        this.socket.send(JSON.stringify({ posY: this.playerPaddle.y }));
       } else if (event.key === "ArrowDown") {
         this.playerPaddle.setY(this.playerPaddle.y + this.paddleSpeed);
-        this.socket.send(JSON.stringify({ playerY: this.playerPaddle.y }));
+        this.socket.send(JSON.stringify({ posY: this.playerPaddle.y }));
       }
     });
   }
