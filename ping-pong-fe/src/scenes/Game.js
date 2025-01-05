@@ -11,12 +11,16 @@ export class Game extends Scene {
     this.paddleSpeed = 10;
     this.playerId;
     this.opponentId;
+    this.topBoundaryCollider;
+    this.bottomBoundaryCollider;
   }
 
   create() {
     this.createWebSocketCommunication();
     this.createPaddle();
     this.createBall();
+    this.createBoundaries();
+    this.createBallBoundaryColliders();
   }
 
   createWebSocketCommunication() {
@@ -33,6 +37,12 @@ export class Game extends Scene {
           console.log("You are Player A. Waiting for Player B...");
         } else if (this.playerId === "player2") {
           console.log("You are Player B. Game starts now!");
+
+          const randomX =
+            Phaser.Math.Between(100, 200) * (Math.random() < 0.5 ? 1 : -1);
+          const randomY =
+            Phaser.Math.Between(100, 200) * (Math.random() < 0.5 ? 1 : -1);
+          this.ball.setVelocity(randomX, randomY);
         }
       } else if (type === "waiting") {
         console.log(message);
@@ -77,5 +87,33 @@ export class Game extends Scene {
       .image(this.cameras.main.width / 2, this.cameras.main.height / 2, "ball")
       .setTintFill(0xffffff)
       .setScale(0.05);
+  }
+
+  createBoundaries() {
+    this.topBoundary = this.add
+      .rectangle(
+        this.playerPaddle.displayWidth,
+        0,
+        this.cameras.main.width - this.playerPaddle.displayWidth * 2 - 20,
+        10,
+        0xffffff
+      )
+      .setOrigin(0);
+
+    this.bottomBoundary = this.add
+      .rectangle(
+        this.playerPaddle.displayWidth,
+        this.cameras.main.height - 10,
+        this.cameras.main.width - this.playerPaddle.displayWidth * 2 - 20,
+        10,
+        0xffffff
+      )
+      .setOrigin(0);
+
+    this.physics.add.existing(this.topBoundary);
+    this.physics.add.existing(this.bottomBoundary);
+
+    this.topBoundary.body.immovable = true;
+    this.bottomBoundary.body.immovable = true;
   }
 }
