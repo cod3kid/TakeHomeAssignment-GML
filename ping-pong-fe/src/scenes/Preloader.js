@@ -1,5 +1,7 @@
 import { Scene } from "phaser";
 import paddle from "../assets/paddle.png";
+import ball from "../assets/ball.png";
+
 export class Preloader extends Scene {
   constructor() {
     super("Preloader");
@@ -11,6 +13,7 @@ export class Preloader extends Scene {
 
   preload() {
     this.load.image("paddle", paddle);
+    this.load.image("ball", ball);
   }
 
   create() {

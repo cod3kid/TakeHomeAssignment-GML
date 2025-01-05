@@ -1,3 +1,4 @@
+import { Physics } from "phaser";
 import { Game } from "./scenes/Game";
 import { Preloader } from "./scenes/Preloader";
 
@@ -14,6 +15,13 @@ const config = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   scene: [Preloader, Game],
+  physics: {
+    default: "arcade",
+    gravity: {
+      x: 0,
+      y: 0,
+    },
+  },
 };
 
 export default new Phaser.Game(config);
