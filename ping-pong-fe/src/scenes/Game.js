@@ -13,8 +13,12 @@ export class Game extends Scene {
     this.opponentId;
     this.topBoundaryCollider;
     this.bottomBoundaryCollider;
-    this.scoreText;
-    this.scoreValueText;
+    this.scoreAText;
+    this.scoreBText;
+    this.scoreAValueText;
+    this.scoreBValueText;
+    this.scoreA = 0;
+    this.scoreB = 0;
   }
 
   create() {
@@ -42,11 +46,9 @@ export class Game extends Scene {
         } else if (this.playerId === "player2") {
           console.log("You are Player B. Game starts now!");
 
-          const randomX =
-            Phaser.Math.Between(100, 200) * (Math.random() < 0.5 ? 1 : -1);
-          const randomY =
-            Phaser.Math.Between(100, 200) * (Math.random() < 0.5 ? 1 : -1);
+          const { randomX, randomY } = this.getRandomBallVelocity();
           this.ball.setVelocity(randomX, randomY);
+
           this.socket.send(
             JSON.stringify({
               ballVelocity: {
@@ -59,8 +61,8 @@ export class Game extends Scene {
       } else if (type === "waiting") {
         console.log(message);
       } else if (type === "movement") {
-        if (message.playerPosY) {
-          this.opponentPaddle.setY(message.playerPosY);
+        if (message.posY) {
+          this.opponentPaddle.setY(message.posY);
         }
 
         if (message.ballVelocity) {
@@ -69,6 +71,10 @@ export class Game extends Scene {
             message.ballVelocity.y
           );
         }
+      } else if (type === "updateScore") {
+        const { scoreA, scoreB } = message;
+        this.scoreAValueText.setText(scoreB);
+        this.scoreBValueText.setText(scoreA);
       }
     };
   }
@@ -113,16 +119,43 @@ export class Game extends Scene {
   }
 
   createScoreBoard() {
-    this.scoreText = this.add
-      .text(this.cameras.main.width / 2, 50, "Score: ", {
+    this.scoreAText = this.add
+      .text(this.cameras.main.width / 4, 50, "Score: ", {
         fontSize: "26px",
       })
       .setOrigin(0.5);
 
-    this.scoreText = this.add
-      .text(this.scoreText.x + this.scoreText.displayWidth / 2, 50, " 0", {
-        fontSize: "26px",
-      })
+    this.scoreAValueText = this.add
+      .text(
+        this.scoreAText.x + this.scoreAText.displayWidth / 2,
+        50,
+        this.scoreA,
+        {
+          fontSize: "26px",
+        }
+      )
+      .setOrigin(0.5, 0.5);
+
+    this.scoreBText = this.add
+      .text(
+        this.cameras.main.width - this.cameras.main.width / 4,
+        50,
+        "Score: ",
+        {
+          fontSize: "26px",
+        }
+      )
+      .setOrigin(0.5);
+
+    this.scoreBValueText = this.add
+      .text(
+        this.scoreBText.x + this.scoreAText.displayWidth / 2,
+        50,
+        this.scoreB,
+        {
+          fontSize: "26px",
+        }
+      )
       .setOrigin(0.5, 0.5);
   }
 
@@ -206,5 +239,61 @@ export class Game extends Scene {
         })
       );
     });
+  }
+
+  getRandomBallVelocity() {
+    const randomX =
+      Phaser.Math.Between(100, 200) * (Math.random() < 0.5 ? 1 : -1);
+    const randomY =
+      Phaser.Math.Between(100, 200) * (Math.random() < 0.5 ? 1 : -1);
+    return { randomX, randomY };
+  }
+
+  handleBallOutOfBounds() {
+    if (this.ball.x < 0 || this.ball.x > this.cameras.main.width) {
+      this.ball.setPosition(
+        this.cameras.main.width / 2,
+        this.cameras.main.height / 2
+      );
+
+      if (this.ball.x < 0) {
+        this.scoreB += 1;
+        console.log(this.scoreB);
+        this.scoreBValueText.setText(this.scoreB);
+
+        this.socket.send(
+          JSON.stringify({
+            scoreA: this.scoreA,
+            scoreB: this.scoreB,
+          })
+        );
+      }
+
+      if (this.ball.x > this.cameras.main.width) {
+        this.scoreA += 1;
+        this.scoreAValueText.setText(this.scoreA);
+        this.socket.send(
+          JSON.stringify({
+            scoreA: this.scoreA,
+            scoreB: this.scoreB,
+          })
+        );
+      }
+
+      const { randomX, randomY } = this.getRandomBallVelocity();
+      this.ball.setVelocity(randomX, randomY);
+      this.socket.send(
+        JSON.stringify({
+          ballVelocity: {
+            x: randomX,
+            y: randomY,
+          },
+        })
+      );
+    }
+  }
+
+  update() {
+    this.handleBallOutOfBounds();
   }
 }
