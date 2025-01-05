@@ -13,6 +13,8 @@ export class Game extends Scene {
     this.opponentId;
     this.topBoundaryCollider;
     this.bottomBoundaryCollider;
+    this.scoreText;
+    this.scoreValueText;
   }
 
   create() {
@@ -22,6 +24,7 @@ export class Game extends Scene {
     this.createBoundaries();
     this.createBallBoundaryColliders();
     this.createBallPaddleCollider();
+    this.createScoreBoard();
   }
 
   createWebSocketCommunication() {
@@ -107,6 +110,20 @@ export class Game extends Scene {
       .image(this.cameras.main.width / 2, this.cameras.main.height / 2, "ball")
       .setTintFill(0xffffff)
       .setScale(0.05);
+  }
+
+  createScoreBoard() {
+    this.scoreText = this.add
+      .text(this.cameras.main.width / 2, 50, "Score: ", {
+        fontSize: "26px",
+      })
+      .setOrigin(0.5);
+
+    this.scoreText = this.add
+      .text(this.scoreText.x + this.scoreText.displayWidth / 2, 50, " 0", {
+        fontSize: "26px",
+      })
+      .setOrigin(0.5, 0.5);
   }
 
   createBoundaries() {
